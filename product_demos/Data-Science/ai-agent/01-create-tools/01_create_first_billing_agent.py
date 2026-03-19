@@ -5,7 +5,7 @@
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/product/llm-tools-functions/ai-agent-functions.png?raw=true" style="float: right" width="700px">
 # MAGIC LLMs are powerful to answer general knowledge, but don't have any information on your own business.
 # MAGIC
-# MAGIC Databricks makes it easy to develop custom tools which can be called by your LLM, creating a complete agent with reasoning capability.
+# MAGIC Databricks makes it easy to develop custom tools which can be called by your LLM, creating a complete agent with reasoning capability and business context.
 # MAGIC
 # MAGIC
 # MAGIC ### Build Simple UC Tools
@@ -148,7 +148,7 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## 3. Give the LLM a Python Function to compute Math
+# MAGIC ## 3. Give the LLM a Python Function to compute math
 # MAGIC LLMs typically struggle to run any advanced math. Let's add a tool to let the LLM compute any math expression, using Python directly.
 # MAGIC
 # MAGIC Databricks makes it easy, running safe, sandboxed python functions:
@@ -248,5 +248,8 @@ displayHTML(f'<a href="/explore/data/functions/{catalog}/{dbName}/calculate_math
 # MAGIC
 # MAGIC But how can we make sure it's working properly, and more importantly will still work well for future questions and modifications?
 # MAGIC
-# MAGIC To do so, we need to build an Evaluation dataset and leverage MLFlow to automatically analyze our agent!
+# MAGIC To do so, we need to build an *evaluation dataset* and leverage MLflow to automatically analyze our agent!
 # MAGIC Open the [02-agent-eval/02.1_agent_evaluation]($../02-agent-eval/02.1_agent_evaluation) notebook to see how to deploy your agent using Langchain and run your first evaluations!
+
+# COMMAND ----------
+
