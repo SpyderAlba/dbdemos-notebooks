@@ -2,17 +2,17 @@
 # MAGIC %md
 # MAGIC # Part 2 - Evaluating and Deploying our Agent Systems
 # MAGIC
-# MAGIC We are going to package our tools together using Langchain (in the agent.py file), and use it as a first agent version to run our evaluation!
+# MAGIC We are going to package our tools using LangChain (in the agent.py file) and use it as a first agent version for our evaluation!
 # MAGIC
-# MAGIC ## Agent Evaluation with MLFlow 3
-# MAGIC Now that we've created an agent, we need to measure its performance, and find a way to compare it with previous versions.
+# MAGIC ## Agent Evaluation with MLflow 3
+# MAGIC Now that we've created an agent, we need to measure its performance and compare it with previous versions.
 # MAGIC
-# MAGIC Databricks makes it very easy with MLFlow 3. You can automatically:
+# MAGIC Databricks makes it very easy with MLflow 3. You can automatically:
 # MAGIC
 # MAGIC - Trace all your agent input/output
 # MAGIC - Capture end user feedback
-# MAGIC - Evaluate your agent against custom or synthetic evaluation dataset
-# MAGIC - Build labeled dataset with your business expert
+# MAGIC - Evaluate your agent against a custom or synthetic evaluation dataset
+# MAGIC - Build a labeled dataset with your business expert
 # MAGIC - Compare each evaluation against the previous one
 # MAGIC - Deploy and track your evaluations once deployed in production 
 # MAGIC
@@ -20,10 +20,11 @@
 # MAGIC
 # MAGIC ### Our agent is composed of:
 # MAGIC
-# MAGIC - [**agent.py**]($./agent.py): in this file, we used Langchain to prepare an agent ready to be used.
-# MAGIC - [**agent_config.yaml**]($./agent_config.yaml): this file contains our agent configuration, including the system prompt and the LLM endpoint that we'll use
+# MAGIC - [**agent.py**]($./agent.py): In this file, we used Langchain to prepare an agent ready to be used.
+# MAGIC - [**agent_config.yaml**]($./agent_config.yaml): This file contains our agent configuration, including the system prompt and the LLM endpoint that we'll use
 # MAGIC
 # MAGIC Let's get started and try our Langchain agent in this notebook!
+# MAGIC
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection or disable tracker during installation. View README for more details.  -->
@@ -45,7 +46,7 @@
 # MAGIC ## 1/ Build and register our agent
 # MAGIC
 # MAGIC ### 1.1/ Define our agent configuration
-# MAGIC Let's first update our configuration file with the tools we want our langchain agent to use, a basic system prompt and the endpoint we want to use.
+# MAGIC Let's first update our configuration file with the tools we want our langchain agent to use, a basic system prompt, and the endpoint we'll use.
 
 # COMMAND ----------
 
@@ -73,9 +74,11 @@ model_config = mlflow.models.ModelConfig(development_config='agent_config.yaml')
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC We created our AGENT using langchain in the `agent.py` file. You can explore it to see the code behind the scene.
+# MAGIC We created our agent using LangChain in `agent.py`. You can explore it to see the code behind the scenes.
 # MAGIC
-# MAGIC In this notebook, we'll keep it simple and just import it and send a request to explore its internal tracing with MLFlow Trace UI:
+# MAGIC
+# MAGIC In this notebook, we'll keep it simple and just import it and send a request to explore its internal tracing with MLflow Trace UI:
+# MAGIC
 
 # COMMAND ----------
 
@@ -92,23 +95,24 @@ answer = AGENT.predict({"input":[{"role": "user", "content": request_example}]})
 # MAGIC ### 1.2/ Open MLFlow tracing
 # MAGIC
 # MAGIC <img src="https://i.imgur.com/tNYUHdC.gif" style="float: right" width="700px">
+# MAGIC Open the experiment from the right notebook menu. You'll see in the traces the message we just sent: `Give me the information about john21@example.net`.
 # MAGIC
-# MAGIC Open now the experiment from the right notebook menu. You'll see in the traces the message we just sent: `Give me the information about john21@example.net`.
+# MAGIC MLflow keeps track of all input/output and internal tracing so we can analyze existing requests and build a better evaluation dataset over time!
 # MAGIC
-# MAGIC MLFlow keeps track of all the input/output and internal tracing so that we can analyze existing request, and create better evaluation dataset over time!
+# MAGIC Not only does MLflow trace all your agent requests, but you can also easily capture end-users' feedback to quickly detect which answer was wrong and improve your agent accordingly!
 # MAGIC
-# MAGIC Not only MLFlow traces all your agent request, but you can also easily capture end-users feedback to quickly detect which answer was wrong and improve your agent accordingly! 
+# MAGIC *We'll show you how to capture feedback when we deploy the application!*
 # MAGIC
-# MAGIC *We'll show you how to capture feedback when we'll deploy the application!*
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ### 1.3/ Log the `agent` as an MLflow model
 # MAGIC
-# MAGIC This looks good! Let's log the agent in our MLFlow registry using the [agent]($./agent) python file to avoid any serialization issue. See [MLflow - Models from Code](https://mlflow.org/docs/latest/models.html#models-from-code).
+# MAGIC This looks good! Let's log the agent in our MLflow registry using the [agent]($./agent) python file to avoid any serialization issues. See [MLflow - Models from Code](https://mlflow.org/docs/latest/models.html#models-from-code).
 # MAGIC
-# MAGIC *Note that we'll also pass the list of Databricks resources (functions, warehouse etc) that our agent need to use to properly work. This will handle the permissions for us during its deployment!*
+# MAGIC *Note that we'll also pass the list of Databricks resources (functions, warehouse, etc.) that our agent needs to use to properly work. This will handle our permissions during deployment!*
+# MAGIC
 
 # COMMAND ----------
 
@@ -129,7 +133,8 @@ logged_agent_info = log_customer_support_agent_model(AGENT.get_resources(), requ
 
 # MAGIC %md
 # MAGIC ### 1.4/ Let's load and try our model
-# MAGIC Our model is saved on MLFlow! Let's load it and give it a try. We'll wrap our predict function so that we can extract more easily the final answer, and also make our evaluation easier:
+# MAGIC Our model is saved on MLflow! Let's load it and give it a try. We'll wrap our predict function so that we can extract the final answer more easily, and also make our evaluation easier:
+# MAGIC
 
 # COMMAND ----------
 
@@ -154,14 +159,15 @@ print(answer)
 # MAGIC
 # MAGIC ### 2.1/ Evaluate the agent with [Agent Evaluation](https://docs.databricks.com/aws/en/mlflow3/genai/eval-monitor/)
 # MAGIC
-# MAGIC We prepared an evaluation dataset ready to use as part of this demo. However, multiple strategies exist:
 # MAGIC
-# MAGIC - create your own evaluation dataset (what we'll do)
-# MAGIC - use existing traces from MLFlow and add them to your dataset (from the API or your experiment UI)
-# MAGIC - use Databricks genai eval synthetic dataset creation (see the [PDF RAG notebook]($../03-knowledge-base-rag/03.1-pdf-rag-tool) for an example)
-# MAGIC - Create labeling session where you can get insights from expert, using the MLFlow UI directly!
+# MAGIC When building an evaluation dataset, multiple strategies exist:
 # MAGIC
-# MAGIC Note: you can also select the existing LLM call from the traces and add to your eval dataset with the UI, or use the API directly:
+# MAGIC - Create your own evaluation dataset (what we'll do)
+# MAGIC - Use existing traces from MLflow and add them to your dataset (from the API or your experiment UI)
+# MAGIC - Use Databricks genai eval synthetic dataset creation (see the [PDF RAG notebook]($../03-knowledge-base-rag/03.1-pdf-rag-tool) for an example)
+# MAGIC - Create a labeling session where you can get insights from an expert, using the MLflow UI directly!
+# MAGIC
+# MAGIC Note: you can also select the existing LLM call from the traces and add it to your eval dataset with the UI, or use the API directly:
 # MAGIC
 # MAGIC ```
 # MAGIC traces = mlflow.search_traces(filter_string=f"attributes.timestamp_ms > {ten_minutes_ago} AND attributes.status = 'OK'", order_by=["attributes.timestamp_ms DESC"])
@@ -179,7 +185,7 @@ display(eval_example)
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ### 2.2/ Create our MLFlow dataset
+# MAGIC ### 2.2/ Create our MLflow dataset
 # MAGIC Let's use the API to create our dataset. You can also directly do it from the Experiment UI!
 
 # COMMAND ----------
@@ -208,7 +214,7 @@ display(eval_dataset.to_df())
 # MAGIC
 # MAGIC <img src="https://i.imgur.com/M3kLBHF.gif" style="float:right" width="700px">
 # MAGIC
-# MAGIC MLFlow 3.0 lets you create custom guidelines to evaluate your agent behavior.
+# MAGIC MLflow 3.0 lets you create custom guidelines to evaluate your agent behavior.
 # MAGIC
 # MAGIC We'll use a few of the built-in ones, and add a custom `Guidelines` on steps and reasoning: we want our LLM to output the answer without mentioning the internal tools it has.
 
@@ -251,8 +257,8 @@ with mlflow.start_run(run_name='eval_with_no_reasoning_instructions'):
 # MAGIC %md
 # MAGIC ## 3/ Improving our eval metrics with a better system prompt
 # MAGIC
-# MAGIC As we can see in the eval, the agent emits a lot of information on the internal tools and steps. 
-# MAGIC For example; it would mention things like:
+# MAGIC As we can see in the eval, the agent emits a lot of information on the internal tools and steps.
+# MAGIC For example, it would mention things like:
 # MAGIC
 # MAGIC `First, I need to find his customer record using his email address. Since I don't have Thomas Green's email address yet, I need to ask for it.`
 # MAGIC
@@ -260,7 +266,8 @@ with mlflow.start_run(run_name='eval_with_no_reasoning_instructions'):
 # MAGIC
 # MAGIC ### 3.1/ Deploying a new model version with a better system prompt
 # MAGIC
-# MAGIC Let's update our system prompt with better instruction to avoid this behavior, and run our eval to make sure this improved!
+# MAGIC Let's update our system prompt with clearer instructions to avoid this behavior, and run our eval to confirm it has improved!
+# MAGIC
 
 # COMMAND ----------
 
@@ -300,7 +307,7 @@ with mlflow.start_run(run_name='eval_with_reasoning_instructions'):
 # MAGIC %md
 # MAGIC ## 4/ Deploy our agent as an endpoint!
 # MAGIC
-# MAGIC Everything looks good! Our latest version now has decent eval score. Let's deploy it as a real-time endpoint for our end user chat application.
+# MAGIC Everything looks good! Our latest version now has a decent eval score. Let's deploy it as a real-time endpoint for our end user chat application.
 # MAGIC
 # MAGIC ### 4.1/ Register our new model version to Unity Catalog
 # MAGIC
@@ -339,6 +346,9 @@ if len(agents.get_deployments(model_name=UC_MODEL_NAME, model_version=uc_registe
 # MAGIC
 # MAGIC Our model is working well, but it can't answer specific questions that our customer support might have about their subscription.
 # MAGIC
-# MAGIC For example, if we ask our Agent how to solve a specific error code in our WIFI router, it'll fail as it doesn't have any valuable information about it.
+# MAGIC For example, if we ask our Agent how to resolve a specific error code on a Wi-Fi router, it'll fail because it doesn't have any useful information about that error code.
 # MAGIC
 # MAGIC Open the [03-knowledge-base-rag/03.1-pdf-rag-tool]($../03-knowledge-base-rag/03.1-pdf-rag-tool)
+
+# COMMAND ----------
+
