@@ -1,6 +1,6 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Building a knowledge base from PDF documentation using Databricks Vector search (RAG)
+# MAGIC # Building a knowledge base from PDF documentation using Databricks Vector Search (RAG)
 # MAGIC
 # MAGIC As we saw before, our agent isn't working well when it comes to answering specific, technical questions such as WIFI router error codes.
 # MAGIC

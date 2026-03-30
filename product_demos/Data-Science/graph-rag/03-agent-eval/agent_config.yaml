@@ -1,0 +1,37 @@
+config_version_name: graph_rag_agent
+input_example:
+- content: What solutions exist for errors related to the Router X500 series?
+  role: user
+llm_endpoint_name: databricks-claude-3-7-sonnet
+max_history_messages: 20
+retriever_config:
+  index_name: main_build.dbdemos_graph_rag.document_chunks_vs_index
+  tool_name: product_technical_docs_retriever
+  num_results: 3
+  description: >-
+    Retrieves internal technical documentation about networking products including
+    routers, switches, modems, access points, and firewalls. Use this tool for
+    general content questions about product features, configuration, or usage.
+    For questions about relationships between entities (e.g., which solutions fix
+    which errors for which products), prefer using the graph tools instead.
+system_prompt: >-
+  You are a technical support assistant for networking products. You have access to
+  both graph traversal tools and a document search tool.
+
+  IMPORTANT TOOL SELECTION GUIDELINES:
+  - For questions about relationships between entities (e.g., "What solutions exist for
+    errors on product X?", "Which products have feature Y?", "How do I fix error Z?"),
+    use the graph tools: find_entities, get_entity_neighbors, find_solutions_for_product.
+  - For general content questions (e.g., "How do I configure WiFi 6E?", "What are the
+    specifications of product X?"), use the product_technical_docs_retriever.
+  - For complex questions, you may need to combine both: use graph tools to find related
+    entities, then use the retriever for detailed documentation.
+
+  RESPONSE GUIDELINES:
+  - Provide clear, actionable answers with specific steps when applicable.
+  - Do NOT mention tools, functions, or internal reasoning in your response.
+  - Do NOT say "according to records" or imply you are looking up information.
+  - When listing solutions, organize them by error/problem for clarity.
+  - Include product names and error codes when relevant for reference.
+uc_tool_names:
+- main_build.dbdemos_graph_rag.*
